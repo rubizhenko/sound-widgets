@@ -4,10 +4,11 @@ var Widget = (function() {
   var widgets = null;
   var currentWidget = 0;
   return {
-    getAudioSrc: function getAudioSrc(widget, audioSelector) {
+    getAudioSrc: function(widget, audioSelector) {
       return widget.querySelector(audioSelector).src;
     },
-    getWidgetSounds: function getWidgetSounds(widgetIndex) {
+    makeAudioFromURL: function(url) {},
+    getWidgetSounds: function(widgetIndex) {
       var currentWidget = widgets[widgetIndex];
       var audioSources = { back: "", start: "", main: "", end: "" };
 
@@ -19,7 +20,7 @@ var Widget = (function() {
       audioSources = { back: back, start: start, main: main, end: end };
       return audioSources;
     },
-    stopBackSound: function stopBackSound(audioBack, showNextWidget) {
+    stopBackSound: function(audioBack, showNextWidget) {
       var timer = setInterval(function() {
         audioBack.volume -= 0.1;
         if (audioBack.volume <= 0.3) {
@@ -31,18 +32,14 @@ var Widget = (function() {
         }
       }, 300);
     },
-    playWidgetSounds: function playWidgetSounds(widget, widgetSounds) {
+    playWidgetSounds: function(widget, widgetSounds) {
       var audioBack = widget.querySelector(".js_audio-back");
       var _this = this;
       audioBack.play();
 
       setTimeout(function() {
         _this.playSoundsQueue(
-          [
-            new Audio(widgetSounds.start),
-            new Audio(widgetSounds.main),
-            new Audio(widgetSounds.end)
-          ],
+          [widgetSounds.start, widgetSounds.main, widgetSounds.end],
           function() {
             _this.stopBackSound(audioBack, function() {
               currentWidget++;
@@ -54,7 +51,7 @@ var Widget = (function() {
         );
       }, 3000);
     },
-    playSoundsQueue: function playSoundsQueue(sounds, stopBack) {
+    playSoundsQueue: function(sounds, stopBack) {
       var index = 0;
       var _this = this;
       function recursivePlay() {
@@ -71,14 +68,20 @@ var Widget = (function() {
       }
       recursivePlay();
     },
-    playInOrder: function playInOrder(audio, callback) {
-      audio.play();
+    playInOrder: function(url, callback) {
+      var audio = new Audio(url);
+      var playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(function() {
+          callback();
+        });
+      }
       if (callback) {
         audio.addEventListener("ended", callback);
       }
     },
 
-    showWidget: function showWidget(widgetIndex) {
+    showWidget: function(widgetIndex) {
       for (var i = 0; i < widgets.length; i++) {
         var widget = widgets[i];
         if (i === widgetIndex) {
@@ -91,7 +94,7 @@ var Widget = (function() {
 
       this.playWidgetSounds(widgets[widgetIndex], widgetSounds);
     },
-    init: function init(widgetSelector) {
+    init: function(widgetSelector) {
       widgets = document.querySelectorAll(widgetSelector);
       this.showWidget(currentWidget);
     }
