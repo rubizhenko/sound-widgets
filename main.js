@@ -6,8 +6,7 @@ var Widget = (function() {
   return {
     getAudioSrc: function(widget, audioSelector) {
       return widget.querySelector(audioSelector).src;
-    },
-    makeAudioFromURL: function(url) {},
+    }, 
     getWidgetSounds: function(widgetIndex) {
       var currentWidget = widgets[widgetIndex];
       var audioSources = { back: "", start: "", main: "", end: "" };
